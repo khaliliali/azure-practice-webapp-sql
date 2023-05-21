@@ -4,56 +4,52 @@ using sqlapp.Models;
 
 namespace sqlapp.Services
 {
-	public class ProductService
-	{
-		private static string db_source = "homoroappserver.database.windows.net";
-		private static string db_user = "sqladmin";
-		private static string db_password = "Azure##123123";
-		private static string db_database = "appdb";
+    public class ProductService : IProductService
+    {
+        private readonly IConfiguration _configuration;
 
+        public ProductService(IConfiguration configuration)
+        {
+            _configuration = configuration;
 
-		private SqlConnection GetConnection()
-		{
-			var _builder = new SqlConnectionStringBuilder();
-			_builder.DataSource = db_source;
-			_builder.UserID = db_user;
-			_builder.Password = db_password;
-			_builder.InitialCatalog = db_database;
-
-			return new SqlConnection(_builder.ConnectionString);
         }
 
-		public List<Product> GetProducts()
-		{
-			SqlConnection conn = GetConnection();
+        private SqlConnection GetConnection()
+        {
+            return new SqlConnection(_configuration.GetConnectionString("SQLConnection"));
+        }
 
-			List<Product> _product_lst = new List<Product>();
+        public List<Product> GetProducts()
+        {
+            SqlConnection conn = GetConnection();
+
+            List<Product> _product_lst = new List<Product>();
 
             string statement = "SELECT ProductId,ProductName,Quantity from Products";
 
-			conn.Open();
+            conn.Open();
 
-			SqlCommand cmd = new SqlCommand(statement, conn);
+            SqlCommand cmd = new SqlCommand(statement, conn);
 
-			using(SqlDataReader reader = cmd.ExecuteReader())
-			{
-				while (reader.Read())
-				{
-					Product product = new Product()
-					{
-						ProductID = reader.GetInt32(0),
-						ProductName = reader.GetString(1),
-						Quantity = reader.GetInt32(2)
-					};
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Product product = new Product()
+                    {
+                        ProductID = reader.GetInt32(0),
+                        ProductName = reader.GetString(1),
+                        Quantity = reader.GetInt32(2)
+                    };
 
-					_product_lst.Add(product);
-				}
-			}
-			conn.Close();
+                    _product_lst.Add(product);
+                }
+            }
+            conn.Close();
 
-			return _product_lst;
+            return _product_lst;
 
         }
-	}
+    }
 }
 
